@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventas Eliminadas - Gestión de Ventas Pro</title>
+    <link rel="stylesheet" href="estilos.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h2>Gestión Pro</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="caja-diaria.html" class="nav-link">
+                        <i class="fas fa-cash-register"></i>
+                        <span>Caja Diaria</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="ventas.html" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Ventas</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="ventas-eliminadas.html" class="nav-link">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Ventas Eliminadas</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <i class="fas fa-bars menu-toggle"></i>
+                    <h1>Ventas Eliminadas</h1>
+                    <span class="header-subtitle">Recuperación y auditoría</span>
+                </div>
+                <div class="header-right">
+                    <div class="header-stats">
+                        <span class="stat-item">
+                            <strong id="eliminadas-count">0</strong>
+                            <small>eliminadas</small>
+                        </span>
+                        <span class="stat-item">
+                            $<span id="eliminadas-total">0.00</span>
+                            <small>impacto total</small>
+                        </span>
+                    </div>
+                    <button class="btn btn-warning" onclick="app.limpiarEliminadas()">
+                        <i class="fas fa-broom"></i> Limpiar Todo
+                    </button>
+                </div>
+            </header>
+
+            <div class="filters">
+                <select class="filter-select" id="filter-eliminadas">
+                    <option value="all">Todas</option>
+                    <option value="today">Hoy</option>
+                    <option value="week">Esta semana</option>
+                    <option value="month">Este mes</option>
+                </select>
+                <input type="text" class="filter-search" id="search-eliminadas" placeholder="🔍 Buscar cliente o ID...">
+                <button class="btn btn-success" onclick="app.recuperarSeleccionadas()">
+                    <i class="fas fa-undo"></i> Recuperar Seleccionadas
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Lista de Ventas Eliminadas</h3>
+                    <div class="table-actions">
+                        <button class="btn btn-primary btn-sm" onclick="app.exportarEliminadas()">
+                            <i class="fas fa-download"></i> Exportar
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="select-all-eliminadas" onchange="app.toggleAllEliminadas()"></th>
+                                <th>ID</th>
+                                <th>Fecha Eliminación</th>
+                                <th>Fecha Original</th>
+                                <th>Cliente</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Motivo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eliminadas-table"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal de confirmación -->
+            <div id="confirm-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="modal-title">Confirmar acción</h3>
+                        <button class="btn-close" onclick="app.cerrarModal()">&times;</button>
+                    </div>
+                    <div class="modal-body" id="modal-body"></div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" onclick="app.cerrarModal()">Cancelar</button>
+                        <button class="btn btn-danger" id="modal-confirm-btn">Confirmar</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
