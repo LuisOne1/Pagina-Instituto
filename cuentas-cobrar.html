@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuentas por Cobrar - Gestión de Ventas Pro</title>
+    <link rel="stylesheet" href="estilos.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h2>Gestión Pro</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="caja-diaria.html" class="nav-link">
+                        <i class="fas fa-cash-register"></i>
+                        <span>Caja Diaria</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="ventas.html" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Ventas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="ventas-eliminadas.html" class="nav-link">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Ventas Eliminadas</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="cuentas-cobrar.html" class="nav-link">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Cuentas por Cobrar</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <i class="fas fa-bars menu-toggle"></i>
+                    <h1>Cuentas por Cobrar</h1>
+                    <span class="header-subtitle">Control de fiados y pagos pendientes</span>
+                </div>
+                <div class="header-right">
+                    <div class="header-stats">
+                        <span class="stat-item">
+                            <strong id="total-cuentas">$0.00</strong>
+                            <small>total pendiente</small>
+                        </span>
+                        <span class="stat-item">
+                            <strong id="cuentas-count">0</strong>
+                            <small>cuentas activas</small>
+                        </span>
+                        <span class="stat-item">
+                            <strong id="dias-promedio">0</strong>
+                            <small>días promedio</small>
+                        </span>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.nuevaCuenta()">
+                        <i class="fas fa-plus"></i> Nueva Cuenta
+                    </button>
+                </div>
+            </header>
+
+            <!-- Filtros Avanzados -->
+            <div class="filters advanced-filters">
+                <div class="filter-group">
+                    <select class="filter-select" id="filter-estado">
+                        <option value="all">Todos los estados</option>
+                        <option value="pendiente">Pendientes</option>
+                        <option value="parcial">Parcialmente pagadas</option>
+                        <option value="pagada">Pagadas</option>
+                        <option value="vence-hoy">Vence hoy</option>
+                        <option value="vence-prox">Vence próximos 7 días</option>
+                    </select>
+                    <input type="date" class="filter-date" id="filter-fecha">
+                </div>
+                <div class="filter-group">
+                    <input type="text" class="filter-search" id="search-cuentas" placeholder="🔍 Buscar cliente o ID...">
+                    <select class="filter-select" id="filter-orden">
+                        <option value="fecha">Fecha</option>
+                        <option value="monto">Monto mayor</option>
+                        <option value="dias">Días pendientes</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-success" onclick="app.abonarSeleccionadas()">
+                        <i class="fas fa-coins"></i> Abonar Seleccionadas
+                    </button>
+                    <button class="btn btn-danger" onclick="app.eliminarCuentas()">
+                        <i class="fas fa-times"></i> Eliminar Seleccionadas
+                    </button>
+                </div>
+            </div>
+
+            <!-- Resumen por estado -->
+            <div class="status-cards">
+                <div class="status-card pendiente">
+                    <div class="status-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="status-info">
+                        <h4 id="pendientes-total">$0.00</h4>
+                        <p><strong id="pendientes-count">0</strong> pendientes</p>
+                    </div>
+                </div>
+                <div class="status-card parcial">
+                    <div class="status-icon">
+                        <i class="fas fa-minus"></i>
+                    </div>
+                    <div class="status-info">
+                        <h4 id="parciales-total">$0.00</h4>
+                        <p><strong id="parciales-count">0</strong> parciales</p>
+                    </div>
+                </div>
+                <div class="status-card pagada">
+                    <div class="status-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="status-info">
+                        <h4 id="pagadas-total">$0.00</h4>
+                        <p><strong id="pagadas-count">0</strong> pagadas</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Lista de Cuentas</h3>
+                    <div class="table-actions">
+                        <button class="btn btn-primary btn-sm" onclick="app.exportarCuentas()">
+                            <i class="fas fa-download"></i> Exportar Excel
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="app.enviarRecordatorios()">
+                            <i class="fas fa-paper-plane"></i> Recordatorios
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="select-all-cuentas" onchange="app.toggleAllCuentas()"></th>
+                                <th>ID</th>
+                                <th>Cliente</th>
+                                <th>Fecha</th>
+                                <th>Días</th>
+                                <th>Monto Original</th>
+                                <th>Abonado</th>
+                                <th>Saldo</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuentas-table"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

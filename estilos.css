@@ -853,3 +853,108 @@ body {
     color: var(--text-primary);
     border: 2px solid var(--border-color);
 }
+/* CUENTAS POR COBRAR - ESTILOS */
+.advanced-filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.filter-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.status-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.status-card {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: 2.5rem;
+    display: flex;
+    gap: 2rem;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+    border-top: 6px solid;
+}
+
+.status-card.pendiente { border-top-color: var(--warning); }
+.status-card.parcial { border-top-color: var(--primary-color); }
+.status-card.pagada { border-top-color: var(--success); }
+
+.status-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-hover);
+}
+
+.status-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+}
+
+.status-card.pendiente .status-icon { background: var(--warning); }
+.status-card.parcial .status-icon { background: var(--primary-color); }
+.status-card.pagada .status-icon { background: var(--success); }
+
+.status-info h4 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.status-info p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.cliente-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.cliente-info small {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.dias-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.dias-badge.warning {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+}
+
+.table-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .advanced-filters {
+        grid-template-columns: 1fr;
+    }
+    
+    .status-cards {
+        grid-template-columns: 1fr;
+    }
+}

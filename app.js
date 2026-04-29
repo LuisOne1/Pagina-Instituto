@@ -3,7 +3,8 @@ class AppGestionVentas {
         this.data = {
             caja: [],
             ventas: [],
-            ventasEliminadas: [], // 🆕 NUEVA PROPIEDAD
+            ventasEliminadas: [],
+            cuentasPorCobrar: [], // 🆕 CUENTAS POR COBRAR
             stats: {
                 balance: 0,
                 todaySales: 0,
@@ -12,262 +13,286 @@ class AppGestionVentas {
                 lastUpdate: new Date().toISOString()
             }
         };
+        this.selectedCuentas = new Set();
         this.selectedEliminadas = new Set();
         this.init();
     }
 
-    init() {
-        this.loadData();
-        this.updateAll();
-        this.bindEvents();
-        console.log('✅ Sistema de Gestión iniciado (con ventas eliminadas)');
-    }
-
-    // 🆕 MÉTODOS PARA VENTAS ELIMINADAS
-    updateEliminadasTable() {
-        const tbody = document.getElementById('eliminadas-table');
-        const countEl = document.getElementById('eliminadas-count');
-        const totalEl = document.getElementById('eliminadas-total');
-        
+    // 🆕 MÉTODOS CUENTAS POR COBRAR
+    updateCuentasTable() {
+        const tbody = document.getElementById('cuentas-table');
         if (!tbody) return;
 
-        const filter = document.getElementById('filter-eliminadas')?.value || 'all';
-        const search = document.getElementById('search-eliminadas')?.value.toLowerCase() || '';
+        const filterEstado = document.getElementById('filter-estado')?.value || 'all';
+        const filterFecha = document.getElementById('filter-fecha')?.value || '';
+        const search = document.getElementById('search-cuentas')?.value.toLowerCase() || '';
+        const orden = document.getElementById('filter-orden')?.value || 'fecha';
 
-        let filtered = this.data.ventasEliminadas;
+        let filtered = [...this.data.cuentasPorCobrar];
 
         // Filtros
-        if (filter === 'today') {
-            filtered = filtered.filter(v => v.fechaEliminacion === this.getToday());
-        } else if (filter === 'week') {
-            filtered = filtered.filter(v => this.isThisWeek(v.fechaEliminacion));
-        } else if (filter === 'month') {
-            filtered = filtered.filter(v => this.isThisMonth(v.fechaEliminacion));
+        if (filterEstado !== 'all') {
+            filtered = filtered.filter(c => c.estado === filterEstado);
+        }
+        if (filterFecha) {
+            filtered = filtered.filter(c => c.fecha.includes(filterFecha));
+        }
+        if (search) {
+            filtered = filtered.filter(c => 
+                c.cliente.toLowerCase().includes(search) || 
+                c.id.toLowerCase().includes(search)
+            );
         }
 
-        // Búsqueda
-        filtered = filtered.filter(v => 
-            v.cliente.toLowerCase().includes(search) || 
-            v.id.toLowerCase().includes(search)
-        );
-
-        let totalImpacto = 0;
-        tbody.innerHTML = '';
-
-        filtered.forEach(venta => {
-            totalImpacto += Math.abs(venta.total);
-            const row = this.createEliminadaRow(venta);
-            tbody.appendChild(row);
+        // Ordenar
+        filtered.sort((a, b) => {
+            if (orden === 'monto') return b.saldo - a.saldo;
+            if (orden === 'dias') return b.diasPendientes - a.diasPendientes;
+            return new Date(b.fecha) - new Date(a.fecha);
         });
 
-        if (countEl) countEl.textContent = filtered.length;
-        if (totalEl) totalEl.textContent = this.formatCurrency(totalImpacto);
+        // Calcular totales por estado
+        const stats = { pendiente: 0, parcial: 0, pagada: 0, counts: { pendiente: 0, parcial: 0, pagada: 0 } };
+        let totalPendiente = 0, totalCuentas = 0, diasPromedio = 0;
+
+        filtered.forEach(cuenta => {
+            stats.counts[cuenta.estado]++;
+            stats[cuenta.estado] += cuenta.saldo;
+            totalPendiente += cuenta.saldo;
+            totalCuentas++;
+            diasPromedio += cuenta.diasPendientes;
+        });
+
+        diasPromedio = totalCuentas ? Math.round(diasPromedio / totalCuentas) : 0;
+
+        // Actualizar dashboard
+        document.getElementById('total-cuentas').textContent = this.formatCurrency(totalPendiente);
+        document.getElementById('cuentas-count').textContent = totalCuentas;
+        document.getElementById('dias-promedio').textContent = diasPromedio;
+
+        // Status cards
+        ['pendiente', 'parcial', 'pagada'].forEach(estado => {
+            document.getElementById(`${estado}s-count`).textContent = stats.counts[estado];
+            document.getElementById(`${estado}s-total`).textContent = this.formatCurrency(stats[estado]);
+        });
+
+        // Tabla
+        tbody.innerHTML = '';
+        filtered.forEach(cuenta => {
+            const row = this.createCuentaRow(cuenta);
+            tbody.appendChild(row);
+        });
     }
 
-    createEliminadaRow(venta) {
+    createCuentaRow(cuenta) {
         const row = document.createElement('tr');
-        row.className = 'eliminada-row';
-        row.dataset.id = venta.id;
+        row.className = `cuenta-row ${cuenta.estado}`;
+        row.dataset.id = cuenta.id;
         row.innerHTML = `
             <td>
-                <input type="checkbox" class="row-checkbox" onchange="app.toggleEliminada('${venta.id}')" 
-                       ${this.selectedEliminadas.has(venta.id) ? 'checked' : ''}>
+                <input type="checkbox" class="row-checkbox" onchange="app.toggleCuenta('${cuenta.id}')"
+                       ${this.selectedCuentas.has(cuenta.id) ? 'checked' : ''}>
             </td>
-            <td><strong style="color: var(--danger);">${venta.id}</strong></td>
-            <td>${venta.fechaEliminacion}</td>
-            <td>${venta.fecha}</td>
-            <td>${venta.cliente}</td>
-            <td>${venta.productos}</td>
-            <td class="negative">${this.formatCurrency(venta.total)}</td>
-            <td><span class="badge warning">${venta.motivo}</span></td>
+            <td><strong>#${cuenta.id}</strong></td>
             <td>
-                <button class="btn-icon" onclick="app.recuperarVenta('${venta.id}')" title="Recuperar">
-                    <i class="fas fa-undo"></i>
+                <div class="cliente-info">
+                    <strong>${cuenta.cliente}</strong>
+                    <small>${cuenta.telefono || 'Sin teléfono'}</small>
+                </div>
+            </td>
+            <td>${cuenta.fecha}</td>
+            <td>
+                <span class="dias-badge ${cuenta.diasPendientes > 30 ? 'warning' : ''}">
+                    ${cuenta.diasPendientes} días
+                </span>
+            </td>
+            <td class="positive">${this.formatCurrency(cuenta.montoOriginal)}</td>
+            <td class="success">${this.formatCurrency(cuenta.abonado)}</td>
+            <td class="${cuenta.saldo > 0 ? 'warning' : 'success'}">${this.formatCurrency(cuenta.saldo)}</td>
+            <td><span class="badge ${cuenta.estado}">${cuenta.estado.toUpperCase()}</span></td>
+            <td>
+                <button class="btn-icon" onclick="app.abonarCuenta('${cuenta.id}')" title="Abonar">
+                    <i class="fas fa-coins"></i>
                 </button>
-                <button class="btn-icon" onclick="app.verEliminada('${venta.id}')" title="Detalles">
+                <button class="btn-icon" onclick="app.verCuenta('${cuenta.id}')" title="Detalles">
                     <i class="fas fa-eye"></i>
                 </button>
-                <button class="btn-icon danger-icon" onclick="app.permanecerEliminada('${venta.id}')" title="Eliminar permanentemente">
-                    <i class="fas fa-times"></i>
+                ${cuenta.saldo === 0 ? '' : `
+                <button class="btn-icon danger-icon" onclick="app.marcarImpaga('${cuenta.id}')" title="Marcar impaga">
+                    <i class="fas fa-exclamation-triangle"></i>
                 </button>
+                `}
             </td>
         `;
         return row;
     }
 
-    // 🆕 ACCIONES VENTAS ELIMINADAS
-    eliminarVenta(id) {
-        const ventaIndex = this.data.ventas.findIndex(v => v.id === id);
-        if (ventaIndex === -1) return;
+    // 🆕 ACCIONES CUENTAS
+    nuevaCuenta() {
+        const cliente = prompt('👤 Nombre del cliente:', 'Cliente fiado') || 'Cliente fiado';
+        const telefono = prompt('📱 Teléfono (opcional):', '');
+        const monto = parseFloat(prompt('💰 Monto total:', '500')) || 0;
+        const dias = parseInt(prompt('📅 Días de plazo:', '30')) || 30;
 
-        const venta = this.data.ventas[ventaIndex];
-        const motivo = prompt('Motivo de eliminación:', 'Error en registro');
+        if (monto > 0) {
+            const cuentaId = 'CC' + Date.now().toString().slice(-6);
+            const cuenta = {
+                id: cuentaId,
+                cliente,
+                telefono: telefono || '',
+                fecha: this.getToday(),
+                montoOriginal: monto,
+                abonado: 0,
+                saldo: monto,
+                estado: 'pendiente',
+                diasPlazo: dias,
+                diasPendientes: 0,
+                pagos: []
+            };
+
+            this.data.cuentasPorCobrar.unshift(cuenta);
+            // NO afecta caja (es fiado)
+            
+            this.saveData();
+            this.updateCuentasTable();
+            alert(`✅ Cuenta #${cuentaId} creada por ${this.formatCurrency(monto)}\nCliente: ${cliente}`);
+        }
+    }
+
+    abonarCuenta(id) {
+        const cuenta = this.data.cuentasPorCobrar.find(c => c.id === id);
+        if (!cuenta || cuenta.saldo <= 0) return;
+
+        const abono = parseFloat(prompt(`Abono para ${cuenta.cliente}\nSaldo actual: ${this.formatCurrency(cuenta.saldo)}`, '100')) || 0;
         
-        if (motivo) {
-            // Mover a eliminadas
-            this.data.ventasEliminadas.unshift({
-                ...venta,
-                fechaEliminacion: this.getToday(),
-                horaEliminacion: new Date().toLocaleTimeString('es-ES'),
-                motivo: motivo.substring(0, 50)
-            });
+        if (abono > 0 && abono <= cuenta.saldo) {
+            const pago = {
+                fecha: this.getToday(),
+                hora: new Date().toLocaleTimeString('es-ES'),
+                monto: abono
+            };
 
-            // Actualizar stats (restar)
-            this.data.stats.todaySales -= venta.total;
-            this.data.stats.todayClients--;
-            this.data.stats.productsSold -= venta.productos;
-            this.data.stats.balance -= venta.total;
-
-            // Remover de ventas activas
-            this.data.ventas.splice(ventaIndex, 1);
-
-            this.saveData();
-            this.updateAll();
+            cuenta.pagos.push(pago);
+            cuenta.abonado += abono;
+            cuenta.saldo -= abono;
             
-            // Registrar salida en caja
-            this.registrarMovimiento('salida', `Anulación venta #${venta.id}`, -venta.total);
-            
-            alert(`🗑️ Venta #${id} movida a eliminadas\nMotivo: ${motivo}`);
-        }
-    }
-
-    recuperarVenta(id) {
-        const eliminadaIndex = this.data.ventasEliminadas.findIndex(v => v.id === id);
-        if (eliminadaIndex === -1) return;
-
-        const venta = this.data.ventasEliminadas[eliminadaIndex];
-
-        if (confirm(`¿Recuperar venta #${id}?\nCliente: ${venta.cliente}\nTotal: ${this.formatCurrency(venta.total)}`)) {
-            // Restaurar a ventas
-            delete venta.fechaEliminacion;
-            delete venta.horaEliminacion;
-            delete venta.motivo;
-            this.data.ventas.unshift(venta);
-
-            // Actualizar stats
-            this.data.stats.todaySales += venta.total;
-            this.data.stats.todayClients++;
-            this.data.stats.productsSold += venta.productos;
-            this.data.stats.balance += venta.total;
-
-            // Remover de eliminadas
-            this.data.ventasEliminadas.splice(eliminadaIndex, 1);
-
             // Registrar entrada en caja
-            this.registrarMovimiento('entrada', `Recuperación venta #${venta.id}`, venta.total);
+            this.registrarMovimiento('entrada', `Abono cuenta #${cuenta.id}`, abono);
+
+            // Actualizar estado
+            if (cuenta.saldo === 0) {
+                cuenta.estado = 'pagada';
+                cuenta.diasPendientes = this.calcularDiasPendientes(cuenta.fecha);
+            } else {
+                cuenta.estado = 'parcial';
+            }
 
             this.saveData();
             this.updateAll();
-            alert(`✅ Venta #${id} recuperada exitosamente`);
+            alert(`💰 Abono de ${this.formatCurrency(abono)} registrado\nNuevo saldo: ${this.formatCurrency(cuenta.saldo)}`);
         }
     }
 
-    toggleEliminada(id) {
+    abonarSeleccionadas() {
+        if (this.selectedCuentas.size === 0) {
+            alert('⚠️ Selecciona al menos una cuenta');
+            return;
+        }
+        alert(`💰 Abonar ${this.selectedCuentas.size} cuentas seleccionadas\n(Usa abonar individual por ahora)`);
+    }
+
+    toggleCuenta(id) {
         const checkbox = event.target;
         if (checkbox.checked) {
-            this.selectedEliminadas.add(id);
+            this.selectedCuentas.add(id);
         } else {
-            this.selectedEliminadas.delete(id);
+            this.selectedCuentas.delete(id);
         }
     }
 
-    toggleAllEliminadas() {
-        const selectAll = document.getElementById('select-all-eliminadas');
-        document.querySelectorAll('.row-checkbox').forEach(cb => {
+    toggleAllCuentas() {
+        const selectAll = document.getElementById('select-all-cuentas');
+        document.querySelectorAll('#cuentas-table .row-checkbox').forEach(cb => {
             cb.checked = selectAll.checked;
             if (selectAll.checked) {
-                this.selectedEliminadas.add(cb.closest('tr').dataset.id);
+                this.selectedCuentas.add(cb.closest('tr').dataset.id);
             } else {
-                this.selectedEliminadas.delete(cb.closest('tr').dataset.id);
+                this.selectedCuentas.delete(cb.closest('tr').dataset.id);
             }
         });
     }
 
-    recuperarSeleccionadas() {
-        if (this.selectedEliminadas.size === 0) {
-            alert('⚠️ Selecciona al menos una venta');
-            return;
-        }
-
-        const ids = Array.from(this.selectedEliminadas);
-        if (confirm(`¿Recuperar ${ids.length} ventas seleccionadas?`)) {
-            ids.forEach(id => this.recuperarVenta(id));
-            this.selectedEliminadas.clear();
-            document.getElementById('select-all-eliminadas').checked = false;
+    verCuenta(id) {
+        const cuenta = this.data.cuentasPorCobrar.find(c => c.id === id);
+        if (cuenta) {
+            let pagosInfo = cuenta.pagos.map(p => `${p.fecha} ${p.hora}: ${this.formatCurrency(p.monto)}`).join('\n');
+            if (!pagosInfo) pagosInfo = 'Sin pagos';
+            
+            alert(`📋 DETALLES CUENTA #${cuenta.id}\n\n` +
+                  `Cliente: ${cuenta.cliente}\n` +
+                  `Teléfono: ${cuenta.telefono || 'N/A'}\n` +
+                  `Fecha: ${cuenta.fecha}\n` +
+                  `Días pendientes: ${cuenta.diasPendientes}\n\n` +
+                  `💰 MONTO ORIGINAL: ${this.formatCurrency(cuenta.montoOriginal)}\n` +
+                  `💵 ABONADO: ${this.formatCurrency(cuenta.abonado)}\n` +
+                  `📊 SALDO: ${this.formatCurrency(cuenta.saldo)}\n` +
+                  `Estado: ${cuenta.estado.toUpperCase()}\n\n` +
+                  `📄 PAGOS:\n${pagosInfo}`);
         }
     }
 
-    limpiarEliminadas() {
-        if (confirm(`¿Eliminar permanentemente ${this.data.ventasEliminadas.length} ventas?\nEsta acción no se puede deshacer.`)) {
-            this.data.ventasEliminadas = [];
+    marcarImpaga(id) {
+        const cuenta = this.data.cuentasPorCobrar.find(c => c.id === id);
+        if (cuenta && confirm(`¿Marcar como impaga?\nSe revertirán pagos de #${cuenta.id}`)) {
+            cuenta.abonado = 0;
+            cuenta.saldo = cuenta.montoOriginal;
+            cuenta.estado = 'pendiente';
+            cuenta.pagos = [];
             this.saveData();
-            this.updateEliminadasTable();
-            alert('🧹 Todas las ventas eliminadas borradas permanentemente');
+            this.updateCuentasTable();
+            alert('⚠️ Cuenta marcada como impaga');
         }
     }
 
-    permanecerEliminada(id) {
-        const index = this.data.ventasEliminadas.findIndex(v => v.id === id);
-        if (index > -1) {
-            this.data.ventasEliminadas.splice(index, 1);
+    eliminarCuentas() {
+        if (this.selectedCuentas.size === 0) return alert('Selecciona cuentas');
+        if (confirm(`Eliminar ${this.selectedCuentas.size} cuentas permanentemente?`)) {
+            this.data.cuentasPorCobrar = this.data.cuentasPorCobrar.filter(c => 
+                !this.selectedCuentas.has(c.id)
+            );
+            this.selectedCuentas.clear();
             this.saveData();
-            this.updateEliminadasTable();
-            alert(`🗑️ Venta #${id} eliminada permanentemente`);
+            this.updateCuentasTable();
         }
     }
 
-    verEliminada(id) {
-        const venta = this.data.ventasEliminadas.find(v => v.id === id);
-        if (venta) {
-            alert(`👁️ VENTA ELIMINADA #${venta.id}\n\n` +
-                  `Cliente: ${venta.cliente}\n` +
-                  `Fecha original: ${venta.fecha}\n` +
-                  `Eliminada: ${venta.fechaEliminacion} ${venta.horaEliminacion}\n` +
-                  `Total: ${this.formatCurrency(venta.total)}\n` +
-                  `Motivo: ${venta.motivo}\n\n` +
-                  `📊 Items: ${venta.productos}`);
-        }
-    }
-
-    exportarEliminadas() {
-        const dataStr = JSON.stringify(this.data.ventasEliminadas, null, 2);
+    exportarCuentas() {
+        const dataStr = JSON.stringify(this.data.cuentasPorCobrar, null, 2);
         const dataBlob = new Blob([dataStr], {type: 'application/json'});
         const url = URL.createObjectURL(dataBlob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `ventas-eliminadas-${this.getToday()}.json`;
+        link.download = `cuentas-cobrar-${this.getToday()}.json`;
         link.click();
-        alert('📥 Archivo exportado: ventas-eliminadas.json');
     }
 
-    // 🆕 MODALES
-    mostrarModal(titulo, mensaje, callback) {
-        document.getElementById('modal-title').textContent = titulo;
-        document.getElementById('modal-body').innerHTML = mensaje;
-        document.getElementById('modal-confirm-btn').onclick = callback;
-        document.getElementById('confirm-modal').classList.add('active');
+    enviarRecordatorios() {
+        const pendientes = this.data.cuentasPorCobrar.filter(c => c.estado === 'pendiente');
+        alert(`📧 Enviando recordatorios a ${pendientes.length} clientes pendientes...\n(Integración WhatsApp/SMS pendiente)`);
     }
 
-    cerrarModal() {
-        document.getElementById('confirm-modal').classList.remove('active');
+    calcularDiasPendientes(fecha) {
+        const hoy = new Date();
+        const fechaCuenta = new Date(fecha.split('/').reverse().join('-'));
+        return Math.floor((hoy - fechaCuenta) / (1000 * 60 * 60 * 24));
     }
 
-    // MÉTODOS ORIGINALES (sin cambios)
-    updateVentasTable() {
-        // ... (mantener igual que antes)
-        const tbody = document.getElementById('ventas-table');
-        if (tbody) {
-            // Código existente de ventas...
-            // AGREGAR BOTÓN ELIMINAR
-            // En createVentaRow agregar:
-            // <button class="btn-icon danger-icon" onclick="app.eliminarVenta('${venta.id}')" title="Eliminar">
-            //     <i class="fas fa-trash"></i>
-            // </button>
-        }
+    // UTILIDADES
+    getToday() {
+        return new Date().toLocaleDateString('es-ES');
     }
 
-    // Resto de métodos sin cambios...
-    // (addEntrada, addSalida, nuevaVenta, etc. permanecen iguales)
+    // ... resto de métodos existentes (sin cambios)
 }
 
 // Inicializar
