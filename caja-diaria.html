@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caja Diaria - Gestión de Ventas Pro</title>
+    <link rel="stylesheet" href="estilos.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h2>Gestión Pro</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="caja-diaria.html" class="nav-link">
+                        <i class="fas fa-cash-register"></i>
+                        <span>Caja Diaria</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="ventas.html" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Ventas</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <i class="fas fa-bars menu-toggle"></i>
+                    <h1>Caja Diaria</h1>
+                </div>
+                <div class="header-right">
+                    <span class="user-profile">
+                        <i class="fas fa-coins"></i>
+                        Saldo: $<span id="caja-total">0.00</span>
+                    </span>
+                </div>
+            </header>
+
+            <div class="caja-container">
+                <div class="caja-card">
+                    <div class="caja-header">
+                        <h2><i class="fas fa-cash-register"></i> Control de Caja</h2>
+                        <div class="caja-actions">
+                            <button class="btn btn-primary btn-lg" onclick="app.addEntrada()">
+                                <i class="fas fa-plus-circle"></i> Entrada
+                            </button>
+                            <button class="btn btn-danger btn-lg" onclick="app.addSalida()">
+                                <i class="fas fa-minus-circle"></i> Salida
+                            </button>
+                            <button class="btn btn-warning btn-lg" onclick="app.cerrarCaja()">
+                                <i class="fas fa-lock"></i> Cerrar Caja
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Últimos Movimientos</h3>
+                        <span id="total-movimientos">0 movimientos</span>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                                <th>Monto</th>
+                                <th>Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="caja-movimientos"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

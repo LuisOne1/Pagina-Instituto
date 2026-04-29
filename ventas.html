@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventas - Gestión de Ventas Pro</title>
+    <link rel="stylesheet" href="estilos.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h2>Gestión Pro</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="caja-diaria.html" class="nav-link">
+                        <i class="fas fa-cash-register"></i>
+                        <span>Caja Diaria</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="ventas.html" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Ventas</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <i class="fas fa-bars menu-toggle"></i>
+                    <h1>Gestión de Ventas</h1>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-primary btn-lg" onclick="app.nuevaVenta()">
+                        <i class="fas fa-plus"></i> Nueva Venta
+                    </button>
+                </div>
+            </header>
+
+            <div class="filters">
+                <select class="filter-select" id="filter-ventas">
+                    <option value="all">Todas las ventas</option>
+                    <option value="today">Hoy</option>
+                    <option value="week">Esta semana</option>
+                    <option value="month">Este mes</option>
+                </select>
+                <input type="text" class="filter-search" id="search-ventas" placeholder="🔍 Buscar cliente o ID...">
+                <span class="filter-count" id="ventas-count">0 ventas</span>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ventas-table"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
