@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<section class="contacto">
+    <div class="contenedor">
+        <h2>Contáctanos</h2>
+        <p>Completa el formulario y nos pondremos en contacto contigo lo antes posible.</p>
+
+        <form class="formulario">
+            <div class="grupo">
+                <label for="nombre">Nombre completo</label>
+                <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required>
+            </div>
+
+            <div class="grupo">
+                <label for="correo">Correo electrónico</label>
+                <input type="email" id="correo" name="correo" placeholder="tu@email.com" required>
+            </div>
+
+            <div class="grupo">
+                <label for="telefono">Teléfono</label>
+                <input type="tel" id="telefono" name="telefono" placeholder="+51 999 999 999">
+            </div>
+
+            <div class="grupo">
+                <label for="mensaje">Comentario</label>
+                <textarea id="mensaje" name="mensaje" rows="5" placeholder="Escribe tu mensaje..." required></textarea>
+            </div>
+
+            <button type="submit">Enviar mensaje</button>
+        </form>
+    </div>
+</section>
+
+</body>
+</html>
+<style>* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #0f172a, #1e3a8a);
+    min-height: 100vh;
+}
+
+/* Sección */
+.contacto {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 20px;
+}
+
+/* Tarjeta */
+.contenedor {
+    background: #ffffff;
+    padding: 40px;
+    max-width: 520px;
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.8s ease;
+}
+
+/* Títulos */
+.contenedor h2 {
+    color: #0f172a;
+    margin-bottom: 10px;
+}
+
+.contenedor p {
+    color: #64748b;
+    margin-bottom: 25px;
+    font-size: 14px;
+}
+
+/* Inputs */
+.grupo {
+    margin-bottom: 18px;
+}
+
+.grupo label {
+    display: block;
+    margin-bottom: 6px;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.grupo input,
+.grupo textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5f5;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: #f8fafc;
+}
+
+/* Focus elegante */
+.grupo input:focus,
+.grupo textarea:focus {
+    border-color: #2563eb;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    outline: none;
+}
+
+/* Botón */
+button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Hover botón */
+button:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+}
+
+/* Animación suave */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}</style>
